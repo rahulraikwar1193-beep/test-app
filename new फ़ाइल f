@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Manager with Photo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    h2, h3 {
+      text-align: center;
+      margin: 15px 0;
+    }
+    #searchBox {
+      display: block;
+      margin: 0 auto 10px auto;
+      padding: 8px;
+      width: 90%;
+      max-width: 600px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #profiles {
+      margin: 10px auto 80px auto;
+      width: 90%;
+      max-width: 600px;
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .profile-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .profile-item:hover {
+      background: #f9fafb;
+    }
+    .profile-photo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #ddd;
+    }
+    #addProfileBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border: none;
+      background: #4f46e5;
+      color: white;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    #addProfileBtn:hover {
+      background: #4338ca;
+    }
+    #profileForm {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border-top: 2px solid #4f46e5;
+      padding: 15px;
+      display: none;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
+    }
+    input, textarea {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin: 5px 0;
+      width: 95%;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #4f46e5;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #4338ca;
+    }
+    #details {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 600px;
+      padding: 15px;
+      background: #e0f2fe;
+      border-radius: 8px;
+      display: none;
+    }
+    pre {
+      background: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+    mark {
+      background: yellow;
+      font-weight: bold;
+    }
+    .details-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 15px auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Profile List</h2>
+  <input type="text" id="searchBox" placeholder="Search by Name or Number...">
+  
+  <div id="profiles"></div>
+  <div id="details"></div>
+
+  <!-- Add Profile Form -->
+  <div id="profileForm">
+    <input type="file" id="photoUpload" accept="image/*">
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="number" placeholder="Number">
+    <input type="text" id="address" placeholder="Address">
+    <textarea id="notes" placeholder="Enter Notes..."></textarea>
+    <button onclick="addProfile()">Save Profile</button>
+  </div>
+
+  <!-- Fixed Add Profile Button -->
+  <button id="addProfileBtn" onclick="toggleForm()">+ Add Profile</button>
+
+  <script>
+    let profiles = [
+      { photo: "https://via.placeholder.com/40", name: "राहुल रैखवार", number: "9876543210", address: "दिल्ली", notes: "Friend from college" },
+      { photo: "https://via.placeholder.com/40", name: "अमित शर्मा", number: "9123456780", address: "मुंबई", notes: "Office colleague" }
+    ];
+
+    let uploadedPhoto = "";
+
+    function toggleForm() {
+      let form = document.getElementById("profileForm");
+      form.style.display = (form.style.display === "block") ? "none" : "block";
+    }
+
+    // जब फोटो चुनी जाएगी तो Base64 में सेव कर लो
+    document.getElementById("photoUpload").addEventListener("change", function(e) {
+      let file = e.target.files[0];
+      if (file) {
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+          uploadedPhoto = ev.target.result; // Base64 photo save
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function addProfile() {
+      let name = document.getElementById("name").value.trim();
+      let number = document.getElementById("number").value.trim();
+      let address = document.getElementById("address").value.trim();
+      let notes = document.getElementById("notes").value.trim();
+
+      if (name && number && address) {
+        profiles.push({ 
+          photo: uploadedPhoto || "https://via.placeholder.com/40", 
+          name, number, address, notes 
+        });
+        renderProfiles();
+        document.getElementById("name").value = "";
+        document.getElementById("number").value = "";
+        document.getElementById("address").value = "";
+        document.getElementById("notes").value = "";
+        document.getElementById("photoUpload").value = "";
+        uploadedPhoto = "";
+        toggleForm();
+      } else {
+        alert("कृपया सभी जानकारी भरें!");
+      }
+    }
+
+    function renderProfiles() {
+      let profilesDiv = document.getElementById("profiles");
+      profilesDiv.innerHTML = "";
+      let searchVal = document.getElementById("searchBox").value.trim().toLowerCase();
+
+      profiles.forEach((profile, index) => {
+        let nameLower = profile.name.toLowerCase();
+        let numberLower = profile.number.toLowerCase();
+
+        if (searchVal) {
+          if (!nameLower.startsWith(searchVal) && !numberLower.startsWith(searchVal)) {
+            return;
+          }
+        }
+
+        let highlightedName = profile.name;
+        if (searchVal && nameLower.startsWith(searchVal)) {
+          highlightedName = `<mark>${profile.name.substring(0, searchVal.length)}</mark>${profile.name.substring(searchVal.length)}`;
+        }
+
+        let highlightedNumber = profile.number;
+        if (searchVal && numberLower.startsWith(searchVal)) {
+          highlightedNumber = `<mark>${profile.number.substring(0, searchVal.length)}</mark>${profile.number.substring(searchVal.length)}`;
+        }
+
+        let div = document.createElement("div");
+        div.className = "profile-item";
+        div.innerHTML = `<img src="${profile.photo}" class="profile-photo"> ${highlightedName} (${highlightedNumber})`;
+        div.onclick = () => showDetails(index);
+        profilesDiv.appendChild(div);
+      });
+    }
+
+    function showDetails(index) {
+      let profile = profiles[index];
+      let detailsDiv = document.getElementById("details");
+      detailsDiv.style.display = "block";
+      document.getElementById("profiles").style.display = "none";
+      document.getElementById("searchBox").style.display = "none";
+
+      detailsDiv.innerHTML = `
+        <h3>Profile Details</h3>
+        <img src="${profile.photo}" class="details-photo">
+        <p><b>Name:</b> ${profile.name}</p>
+        <p><b>Number:</b> ${profile.number}</p>
+        <p><b>Address:</b> ${profile.address}</p>
+        <pre><b>Notes:</b>\n${profile.notes}</pre>
+        <button onclick="goBack()">⬅ Back</button>
+      `;
+    }
+
+    function goBack() {
+      document.getElementById("details").style.display = "none";
+      document.getElementById("profiles").style.display = "block";
+      document.getElementById("searchBox").style.display = "block";
+    }
+
+    document.getElementById("searchBox").addEventListener("input", renderProfiles);
+    renderProfiles();
+  </script>
+</body>
+</html>
